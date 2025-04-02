@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Predicciones - Sistema de Predicción IA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="page-header mb-4">
+            <h1><i class="fas fa-chart-line me-2"></i>Predicciones Generales</h1>
+            <p class="lead">Analiza datos de transacciones para predecir comportamientos futuros.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-cogs me-2"></i>Ejecutar Predicción</h5>
+            </div>
+            <div class="card-body">
+                <p>Este módulo analiza automáticamente los datos de transacciones en la base de datos para generar predicciones.</p>
+                <p class="mb-4">Al hacer clic en el botón, el sistema:</p>
+                <ul class="feature-list mb-4">
+                    <li><i class="fas fa-database text-primary me-2"></i> Consulta las transacciones recientes</li>
+                    <li><i class="fas fa-calculator text-primary me-2"></i> Procesa los montos y reembolsos</li>
+                    <li><i class="fas fa-brain text-primary me-2"></i> Aplica el modelo de IA entrenado</li>
+                    <li><i class="fas fa-chart-pie text-primary me-2"></i> Genera predicciones basadas en patrones</li>
+                </ul>
+                <button id="runPredictionBtn" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-play-circle me-2"></i>Ejecutar Predicción
+                </button>
+                <div id="loadingIndicator" class="text-center mt-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Procesando datos y generando predicciones...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Resultados de Predicción</h5>
+            </div>
+            <div class="card-body">
+                <div id="noResultsMessage" class="text-center py-5">
+                    <i class="fas fa-chart-area fa-4x text-muted mb-3"></i>
+                    <h4>Sin resultados disponibles</h4>
+                    <p class="text-muted">Ejecuta una predicción para ver los resultados aquí.</p>
+                </div>
+                
+                <div id="resultsContainer" class="d-none">
+                    <div class="alert alert-success mb-4">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Predicción completada exitosamente con <span id="dataPointsCount">0</span> puntos de datos.</span>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Predicciones Positivas</h6>
+                                    <h2 id="positiveCount" class="display-4 text-success">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-subtitle mb-2 text-muted">Predicciones Negativas</h6>
+                                    <h2 id="negativeCount" class="display-4 text-danger">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">Distribución de Predicciones</h5>
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="predictionsChart"></canvas>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">Datos Detallados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Monto</th>
+                                    <th>Reembolso</th>
+                                    <th>Predicción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="predictionsTableBody">
+                                <!-- Los datos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const runPredictionBtn = document.getElementById('runPredictionBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const dataPointsCount = document.getElementById('dataPointsCount');
+        const positiveCount = document.getElementById('positiveCount');
+        const negativeCount = document.getElementById('negativeCount');
+        const predictionsTableBody = document.getElementById('predictionsTableBody');
+        let predictionsChart = null;
+        
+        runPredictionBtn.addEventListener('click', async function() {
+            // Mostrar indicador de carga
+            loadingIndicator.classList.remove('d-none');
+            runPredictionBtn.disabled = true;
+            
+            try {
+                // Llamar a la API de predicción
+                const response = await fetch('/predict');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Procesar resultados
+                const predictions = data.predicciones || [];
+                
+                // Contar predicciones positivas y negativas
+                const posCount = predictions.filter(p => p === 1).length;
+                const negCount = predictions.filter(p => p === 0).length;
+                
+                // Actualizar contadores
+                dataPointsCount.textContent = predictions.length;
+                positiveCount.textContent = posCount;
+                negativeCount.textContent = negCount;
+                
+                // Limpiar tabla
+                predictionsTableBody.innerHTML = '';
+                
+                // Crear filas de tabla con datos simulados
+                // En un caso real, necesitaríamos los datos originales también
+                for (let i = 0; i < predictions.length; i++) {
+                    const row = document.createElement('tr');
+                    
+                    // Simular datos de monto y reembolso
+                    const amount = (Math.random() * 1000).toFixed(2);
+                    const refund = (Math.random() * amount * 0.3).toFixed(2);
+                    
+                    row.innerHTML = `
+                        <td>${i + 1}</td>
+                        <td>$${amount}</td>
+                        <td>$${refund}</td>
+                        <td>
+                            <span class="badge ${predictions[i] === 1 ? 'bg-success' : 'bg-danger'}">
+                                ${predictions[i] === 1 ? 'Positivo' : 'Negativo'}
+                            </span>
+                        </td>
+                    `;
+                    
+                    predictionsTableBody.appendChild(row);
+                }
+                
+                // Crear/actualizar gráfico
+                createOrUpdateChart([posCount, negCount]);
+                
+                // Mostrar resultados
+                noResultsMessage.classList.add('d-none');
+                resultsContainer.classList.remove('d-none');
+                
+            } catch (error) {
+                console.error('Error al obtener predicciones:', error);
+                alert('Error al obtener predicciones: ' + error.message);
+            } finally {
+                // Ocultar indicador de carga
+                loadingIndicator.classList.add('d-none');
+                runPredictionBtn.disabled = false;
+            }
+        });
+        
+        function createOrUpdateChart(data) {
+            const ctx = document.getElementById('predictionsChart').getContext('2d');
+            
+            if (predictionsChart) {
+                predictionsChart.data.datasets[0].data = data;
+                predictionsChart.update();
+            } else {
+                predictionsChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Positivas', 'Negativas'],
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                'rgba(40, 167, 69, 0.7)',
+                                'rgba(220, 53, 69, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(220, 53, 69, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

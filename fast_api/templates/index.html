@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Sistema de Predicción IA{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5">
+    <h1 class="display-4 mb-4">Sistema de Predicción con Inteligencia Artificial</h1>
+    <p class="lead mb-5">Utiliza modelos avanzados de machine learning para predecir resultados y optimizar decisiones.</p>
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <a href="/predict-page" class="card-link">
+                <div class="card feature-card mb-4">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-chart-line fa-3x"></i>
+                        </div>
+                        <h3 class="card-title">Predicciones Generales</h3>
+                        <p class="card-text">Analiza datos de transacciones para predecir comportamientos futuros.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/payment-page" class="card-link">
+                <div class="card feature-card mb-4">
+                    <div class="card-body text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-money-bill-wave fa-3x"></i>
+                        </div>
+                        <h3 class="card-title">Predicción de Pagos</h3>
+                        <p class="card-text">Predice montos de pagos futuros basados en el historial de transacciones.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="info-section py-5">
+    <div class="row">
+        <div class="col-md-6">
+            <h2 class="section-title">¿Cómo funciona?</h2>
+            <p>Nuestro sistema utiliza algoritmos avanzados de machine learning entrenados con datos históricos de transacciones para:</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle text-success me-2"></i> Analizar patrones en datos de transacciones</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i> Predecir comportamientos futuros</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i> Estimar montos de pagos próximos</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i> Optimizar decisiones basadas en datos</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <div class="card dashboard-preview">
+                <div class="card-body">
+                    <h3 class="card-title">Estadísticas del Sistema</h3>
+                    <canvas id="statsChart" width="400" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Datos de ejemplo para el gráfico
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        const statsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Predicciones Realizadas',
+                    data: [65, 59, 80, 81, 56, 55],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Precisión (%)',
+                    data: [78, 82, 85, 89, 91, 93],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

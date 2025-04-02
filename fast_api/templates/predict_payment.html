@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Predicción de Pagos - Sistema de Predicción IA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="page-header mb-4">
+            <h1><i class="fas fa-money-bill-wave me-2"></i>Predicción de Pagos</h1>
+            <p class="lead">Predice montos de pagos futuros basados en el historial de transacciones de un usuario.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-user me-2"></i>Datos del Usuario</h5>
+            </div>
+            <div class="card-body">
+                <form id="paymentPredictionForm">
+                    <div class="mb-4">
+                        <label for="userId" class="form-label">ID de Usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                            <input type="text" class="form-control" id="userId" name="userId" placeholder="Ingrese el ID del usuario" required>
+                        </div>
+                        <div class="form-text">Ingrese el identificador único del usuario para predecir su próximo pago.</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-calculator me-2"></i>Predecir Próximo Pago
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="loadingIndicator" class="text-center mt-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Analizando historial de transacciones...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Información</h5>
+            </div>
+            <div class="card-body">
+                <p>Este módulo utiliza un modelo de machine learning entrenado para predecir el monto del próximo pago de un usuario basado en:</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-calendar-alt text-primary me-2"></i> Patrones temporales (día, mes, año)</li>
+                    <li><i class="fas fa-clock text-primary me-2"></i> Hora del día de transacciones previas</li>
+                    <li><i class="fas fa-calendar-day text-primary me-2"></i> Día de la semana de actividad</li>
+                    <li><i class="fas fa-history text-primary me-2"></i> Historial de transacciones previas</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i>Resultado de la Predicción</h5>
+            </div>
+            <div class="card-body">
+                <div id="noResultsMessage" class="text-center py-5">
+                    <i class="fas fa-search-dollar fa-4x text-muted mb-3"></i>
+                    <h4>Sin predicciones disponibles</h4>
+                    <p class="text-muted">Ingrese un ID de usuario para ver la predicción de su próximo pago.</p>
+                </div>
+                
+                <div id="resultsContainer" class="d-none">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <span>Resultados para el usuario: <strong id="resultUserId"></strong></span>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="prediction-result text-center p-4 border rounded">
+                                <h6 class="text-muted mb-2">Monto Predicho para el Próximo Pago</h6>
+                                <h1 class="display-3 text-primary mb-0">$<span id="predictedAmount">0.00</span></h1>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Factores de Predicción</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tbody>
+                                                <tr>
+                                                    <th scope="row"><i class="fas fa-calendar-alt me-2"></i>Última Transacción</th>
+                                                    <td id="lastTransactionDate">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row"><i class="fas fa-clock me-2"></i>Hora Típica</th>
+                                                    <td id="typicalHour">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row"><i class="fas fa-calendar-day me-2"></i>Día de la Semana</th>
+                                                    <td id="weekday">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row"><i class="fas fa-chart-bar me-2"></i>Confianza</th>
+                                                    <td>
+                                                        <div class="progress">
+                                                            <div id="confidenceBar" class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">75%</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5 class="mb-3">Historial de Predicciones</h5>
+                        <div class="chart-container" style="position: relative; height:250px;">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentPredictionForm = document.getElementById('paymentPredictionForm');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultUserId = document.getElementById('resultUserId');
+        const predictedAmount = document.getElementById('predictedAmount');
+        const lastTransactionDate = document.getElementById('lastTransactionDate');
+        const typicalHour = document.getElementById('typicalHour');
+        const weekday = document.getElementById('weekday');
+        const confidenceBar = document.getElementById('confidenceBar');
+        let historyChart = null;
+        
+        // Días de la semana en español
+        const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        
+        paymentPredictionForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userId').value.trim();
+            if (!userId) {
+                alert('Por favor ingrese un ID de usuario válido');
+                return;
+            }
+            
+            // Mostrar indicador de carga
+            loadingIndicator.classList.remove('d-none');
+            
+            try {
+                // Llamar a la API de predicción de pagos
+                const response = await fetch(`/predict_payment/?user_id=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Actualizar UI con resultados
+                resultUserId.textContent = data.user_id;
+                predictedAmount.textContent = data.predicted_amount;
+                
+                // Generar datos simulados para la demostración
+                // En un caso real, estos datos vendrían de la API
+                const today = new Date();
+                const lastTransactionSimulated = new Date(today);
+                lastTransactionSimulated.setDate(today.getDate() - Math.floor(Math.random() * 7));
+                
+                lastTransactionDate.textContent = lastTransactionSimulated.toLocaleDateString();
+                
+                const hour = Math.floor(Math.random() * 12) + 8; // Entre 8 AM y 8 PM
+                typicalHour.textContent = `${hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
+                
+                const randomWeekdayIndex = Math.floor(Math.random() * 7);
+                weekday.textContent = weekdays[randomWeekdayIndex];
+                
+                const confidence = Math.floor(Math.random() * 30) + 70; // Entre 70% y 99%
+                confidenceBar.style.width = `${confidence}%`;
+                confidenceBar.textContent = `${confidence}%`;
+                confidenceBar.setAttribute('aria-valuenow', confidence);
+                
+                // Crear gráfico de historial simulado
+                createHistoryChart();
+                
+                // Mostrar resultados
+                noResultsMessage.classList.add('d-none');
+                resultsContainer.classList.remove('d-none');
+                
+            } catch (error) {
+                console.error('Error al obtener predicción de pago:', error);
+                alert('Error al obtener predicción: ' + error.message);
+            } finally {
+                // Ocultar indicador de carga
+                loadingIndicator.classList.add('d-none');
+            }
+        });
+        
+        function createHistoryChart() {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            
+            // Generar datos simulados para el gráfico
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+            const actualPayments = [];
+            const predictedPayments = [];
+            
+            // Valor base para simular pagos
+            let baseValue = Math.random() * 500 + 500;
+            
+            for (let i = 0; i < months.length; i++) {
+                // Simular variación en los pagos
+                const variation = Math.random() * 100 - 50;
+                const actual = baseValue + variation;
+                actualPayments.push(actual.toFixed(2));
+                
+                // Simular predicciones con ligera variación
+                const predictionError = Math.random() * 60 - 30;
+                const predicted = actual + predictionError;
+                predictedPayments.push(predicted.toFixed(2));
+                
+                // Actualizar valor base para el siguiente mes
+                baseValue = actual;
+            }
+            
+            if (historyChart) {
+                historyChart.destroy();
+            }
+            
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Pagos Reales',
+                            data: actualPayments,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Pagos Predichos',
+                            data: predictedPayments,
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointBackgroundColor: 'rgba(255, 159, 64, 1)',
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
