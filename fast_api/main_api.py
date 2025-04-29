@@ -50,7 +50,13 @@ def get_db():
 
 # Rutas para las páginas web
 @app.get("/")
-def home(request: Request):
+def root(request: Request):
+    # Redirigir a la página de login como página principal
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/dashboard")
+def dashboard(request: Request):
+    # Esta era la antigua ruta principal, ahora es dashboard y requiere login
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/predict-page")
@@ -60,6 +66,10 @@ def predict_page(request: Request):
 @app.get("/payment-page")
 def payment_page(request: Request):
     return templates.TemplateResponse("predict_payment.html", {"request": request})
+
+@app.get("/login")
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
 # Ruta API para información básica
 @app.get("/api/info")
@@ -137,3 +147,12 @@ def predict_payment(user_id: str, db: Session = Depends(get_db)):
     prediction = model2.predict(input_data)
 
     return {"user_id": user_id, "predicted_amount": round(float(prediction[0]), 2)}
+
+
+# Código para iniciar el servidor si se ejecuta directamente este archivo
+if __name__ == "__main__":
+    import uvicorn
+    print("Iniciando servidor FastAPI...")
+    print("La aplicación estará disponible en: http://127.0.0.1:8000")
+    print("Presiona CTRL+C para detener el servidor")
+    uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - Sistema de Predicción IA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0"><i class="fas fa-lock me-2"></i>Iniciar Sesión</h4>
+            </div>
+            <div class="card-body p-4">
+                <div id="loginAlert" class="alert d-none mb-3" role="alert"></div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="correo@ejemplo.com" required>
+                        </div>
+                        <div class="invalid-feedback">Por favor ingrese un correo electrónico válido.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">Por favor ingrese su contraseña.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="loginButton">
+                            <span class="spinner-border spinner-border-sm d-none me-2" id="loginSpinner" role="status" aria-hidden="true"></span>
+                            <i class="fas fa-sign-in-alt me-2" id="loginIcon"></i>Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p class="mb-0">¿No tiene una cuenta? <a href="#" class="text-primary">Registrarse</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-info-circle me-2 text-primary"></i>Información</h5>
+                <p class="card-text">Inicie sesión para acceder a todas las funcionalidades del sistema de predicción, incluyendo:</p>
+                <ul class="list-group list-group-flush mb-0">
+                    <li class="list-group-item"><i class="fas fa-chart-line text-primary me-2"></i> Predicciones personalizadas</li>
+                    <li class="list-group-item"><i class="fas fa-history text-primary me-2"></i> Historial de transacciones</li>
+                    <li class="list-group-item"><i class="fas fa-cog text-primary me-2"></i> Configuración de cuenta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/auth.js"></script>
+<script>
+    // Toggle password visibility
+    document.querySelector('.toggle-password').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+</script>
+{% endblock %}

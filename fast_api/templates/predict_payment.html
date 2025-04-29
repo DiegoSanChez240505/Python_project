@@ -19,6 +19,34 @@
                 <h5 class="card-title mb-0"><i class="fas fa-user me-2"></i>Datos del Usuario</h5>
             </div>
             <div class="card-body">
+                <!-- Contenedor para buscar y listar usuarios -->
+                <div class="mb-4">
+                    <h6><i class="fas fa-users me-2"></i>Buscar Usuario</h6>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="userSearch" placeholder="Buscar por nombre o ID...">
+                    </div>
+                    <div class="user-list-container border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                        <div id="userListLoading" class="text-center p-2">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Cargando usuarios...</span>
+                            </div>
+                            <span class="ms-2">Cargando usuarios...</span>
+                        </div>
+                        <div id="userListError" class="text-center p-2 d-none">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <span>Error al cargar usuarios</span>
+                        </div>
+                        <ul id="userList" class="list-group list-group-flush d-none">
+                            <!-- Los usuarios se cargarán aquí dinámicamente -->
+                        </ul>
+                        <div id="noUsersFound" class="text-center p-2 d-none">
+                            <i class="fas fa-user-slash text-muted me-2"></i>
+                            <span>No se encontraron usuarios</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <form id="paymentPredictionForm">
                     <div class="mb-4">
                         <label for="userId" class="form-label">ID de Usuario</label>
@@ -151,6 +179,126 @@
         const weekday = document.getElementById('weekday');
         const confidenceBar = document.getElementById('confidenceBar');
         let historyChart = null;
+        
+        // Referencias a elementos de la lista de usuarios
+        const userSearch = document.getElementById('userSearch');
+        const userList = document.getElementById('userList');
+        const userListLoading = document.getElementById('userListLoading');
+        const userListError = document.getElementById('userListError');
+        const noUsersFound = document.getElementById('noUsersFound');
+        const userIdInput = document.getElementById('userId');
+        
+        // Cargar la lista de usuarios al iniciar
+        let allUsers = [];
+        loadUsers();
+        
+        // Agregar listener para filtrar usuarios al escribir
+        userSearch.addEventListener('input', filterUsers);
+        
+        // Función para cargar la lista de usuarios desde la API
+        async function loadUsers() {
+            try {
+                // Mostrar cargando
+                userListLoading.classList.remove('d-none');
+                userListError.classList.add('d-none');
+                userList.classList.add('d-none');
+                noUsersFound.classList.add('d-none');
+                
+                // Hacer petición a la API
+                const response = await fetch('https://keidotapi.azurewebsites.net/api/Users');
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                allUsers = await response.json();
+                
+                // Mostrar los usuarios
+                renderUsers(allUsers);
+                
+            } catch (error) {
+                console.error('Error al cargar usuarios:', error);
+                userListLoading.classList.add('d-none');
+                userListError.classList.remove('d-none');
+            }
+        }
+        
+        // Función para renderizar la lista de usuarios
+        function renderUsers(users) {
+            userListLoading.classList.add('d-none');
+            
+            if (users.length === 0) {
+                noUsersFound.classList.remove('d-none');
+                userList.classList.add('d-none');
+                return;
+            }
+            
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item list-group-item-action py-2 px-3';
+                listItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${user.name || user.userName || 'Usuario'}</strong>
+                            <div class="small text-muted">${user.id || user.userId}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary select-user" data-user-id="${user.id || user.userId}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Agregar evento para seleccionar usuario
+                const selectButton = listItem.querySelector('.select-user');
+                selectButton.addEventListener('click', function() {
+                    selectUser(user.id || user.userId);
+                });
+                
+                userList.appendChild(listItem);
+            });
+            
+            userList.classList.remove('d-none');
+            noUsersFound.classList.add('d-none');
+        }
+        
+        // Función para filtrar usuarios según búsqueda
+        function filterUsers() {
+            const searchTerm = userSearch.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                renderUsers(allUsers);
+                return;
+            }
+            
+            const filteredUsers = allUsers.filter(user => {
+                const userId = (user.id || user.userId || '').toLowerCase();
+                const userName = (user.name || user.userName || '').toLowerCase();
+                const userEmail = (user.email || '').toLowerCase();
+                
+                return userId.includes(searchTerm) || 
+                       userName.includes(searchTerm) || 
+                       userEmail.includes(searchTerm);
+            });
+            
+            renderUsers(filteredUsers);
+        }
+        
+        // Función para seleccionar un usuario
+        function selectUser(userId) {
+            userIdInput.value = userId;
+            
+            // También podríamos resaltar el usuario seleccionado
+            const items = userList.querySelectorAll('.list-group-item');
+            items.forEach(item => {
+                const button = item.querySelector('.select-user');
+                if (button && button.dataset.userId === userId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
         
         // Días de la semana en español
         const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
